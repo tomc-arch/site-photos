@@ -65,26 +65,29 @@
     />
   </main>
 
-  <!--Fetch photos list from photos.json -->
-async function loadPhotoFromJSON() {
-  try {
-    const response = await fetch('photos.json'); // <-- ICI : la requête vers photos.json
-    if (!response.ok) throw new Error('photos.json not found');
-    const photos = await response.json(); // <-- ICI : lecture des données du fichier
-    
-    if (Array.isArray(photos) && photos.length > 0) {
-      const imgElement = document.getElementById('main-photo');
-      imgElement.src = photos[0].url || photos[0];
-      if (photos[0].alt) {
-        imgElement.alt = photos[0].alt;
+
+<script>
+    // Fetch photos list from photos.json
+    async function loadPhotoFromJSON() {
+      try {
+        const response = await fetch('photos.json');
+        if (!response.ok) throw new Error('photos.json not found');
+        const photos = await response.json();
+        
+        if (Array.isArray(photos) && photos.length > 0) {
+          const imgElement = document.getElementById('main-photo');
+          imgElement.src = photos[0].url || photos[0];
+          if (photos[0].alt) {
+            imgElement.alt = photos[0].alt;
+          }
+        }
+      } catch (err) {
+        console.log('Using default photo until photos.json is added:', err.message);
       }
     }
-  } catch (err) {
-    console.log('Using default photo until photos.json is added:', err.message);
-  }
-}
 
-window.addEventListener('DOMContentLoaded', loadPhotoFromJSON);
-
+    window.addEventListener('DOMContentLoaded', loadPhotoFromJSON);
+  </script>
+  
 </body>
 </html>
