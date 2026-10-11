@@ -32,21 +32,21 @@
     /* 
       Style du tirage photo physique :
       - position: absolute : indispensable pour placer chaque photo n'importe où
-      - padding: 40px : crée la marge blanche réaliste tout autour du tirage
+      - padding: 5px : crée la marge blanche réaliste tout autour du tirage
       - box-shadow : ombre portée douce et naturelle
       - pointer-events: none : permet au clic de traverser les photos déjà posées
     */
     .photo-print {
       position: absolute; 
       background: #ffffff;
-      padding: 40px; /* Bordure blanche papier de 40px */
+      padding: 5px; /* Bordure blanche papier de 5px */
       box-shadow: 
         0 14px 28px rgba(0, 0, 0, 0.12),
         0 10px 10px rgba(0, 0, 0, 0.08),
         0 1px 3px rgba(0, 0, 0, 0.05);
       opacity: 0; /* Invisible au moment exact de sa création dans le DOM */
-      transform: scale(0.92); /* Légèrement plus petite avant l'animation d'arrivée */
-      transition: opacity 0.4s ease-out, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transform: scale(1.05); /* Légèrement plus GRANDE avant l'animation d'arrivée */
+      transition: opacity 0.1s ease-out, transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
       pointer-events: none; /* Clics traversants : évite de bloquer les clics suivants */
       max-width: 90vw;
       width: 420px;
@@ -63,7 +63,7 @@
     /* Sur petit écran mobile, on réduit la marge blanche pour garder l'image visible */
     @media (max-width: 640px) {
       .photo-print {
-        padding: 20px;
+        padding: 5px;
         width: 300px;
       }
     }
