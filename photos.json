@@ -6,13 +6,23 @@
 "alt": "TC_Georgie1"
 },
 {
-"url": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80",
+"url": "A1-1.png",
 "title": "Photo 2",
 "alt": "Brume forestière"
 },
 {
-"url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+"url": "A1-2.png",
 "title": "Photo 3",
 "alt": "Plage au coucher du soleil"
-}
+},
+  {
+"url": "Artboard 3.png",
+"title": "Photo 2",
+"alt": "Brume forestière"
+},
+  {
+"url": "DSC04559-2.jpg",
+"title": "Photo 2",
+"alt": "Brume forestière"
+},
 ]
