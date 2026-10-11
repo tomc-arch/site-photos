@@ -153,8 +153,8 @@
       const randomAngle = (Math.random() * 16 - 8).toFixed(1);
 
       // Décalage du centre : variation de ±12% autour du centre de l'écran
-      const offsetX = (Math.random() * 24 - 12).toFixed(1);
-      const offsetY = (Math.random() * 24 - 12).toFixed(1);
+      const offsetX = (Math.random() * 24 - 20).toFixed(1);
+      const offsetY = (Math.random() * 24 - 20).toFixed(1);
 
       // Augmentation du z-index : la nouvelle photo se pose strictement sur le dessus
       highestZIndex += 1;
@@ -165,7 +165,7 @@
       card.style.top = `calc(50% + ${offsetY}vh)`;
       
       // Position initiale (légèrement réduite pour l'effet de rebond)
-      card.style.transform = `translate(-50%, -50%) rotate(${randomAngle}deg) scale(0.92)`;
+      card.style.transform = `translate(-10%, -10%) rotate(${randomAngle}deg) scale(1.05)`;
 
       // Insertion du nouvel élément dans la page web
       container.appendChild(card);
@@ -173,7 +173,7 @@
       // Déclenchement de l'animation d'apparition fluide à la frame suivante
       requestAnimationFrame(() => {
         card.classList.add('revealed'); // Passe opacity à 1
-        card.style.transform = `translate(-50%, -50%) rotate(${randomAngle}deg) scale(1)`;
+        card.style.transform = `translate(-10%, -10%) rotate(${randomAngle}deg) scale(1)`;
       });
 
       // Avancement du compteur : passe à la suivante et boucle au début si fin atteinte
