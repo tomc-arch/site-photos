@@ -40,10 +40,10 @@
       position: absolute; 
       background: #ffffff;
       padding: 5px; /* Bordure blanche papier de 5px */
-      box-shadow: 
-        0 14px 28px rgba(0, 0, 0, 0.12),
-        0 10px 10px rgba(0, 0, 0, 0.08),
-        0 1px 3px rgba(0, 0, 0, 0.05);
+      box-shadow:
+        0 14px 10px rgba(0, 0, 0, 0.05), /*ombre ambiante*/
+        0 10px 10px rgba(0, 0, 0, 0.08), /*ombre intermediaire*/
+        0 2px 2px rgba(0, 0, 0, 0.2); /*ombre de contact*/
       opacity: 0; /* Invisible au moment exact de sa création dans le DOM */
       transform: scale(1.05); /* Légèrement plus GRANDE avant l'animation d'arrivée */
       transition: opacity 0.1s ease-out, transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
