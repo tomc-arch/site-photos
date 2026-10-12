@@ -6,15 +6,7 @@
   <title>tomclouaire.com — Showcase</title>
   <!-- Tailwind CSS CDN for modern utilities -->
   <script src="https://cdn.tailwindcss.com"></script>
- 
-  <!-- Image d'instructions visible à l'arrivée -->
-  <aside id="instructions-guide" class="fixed right-8 top-1/2 -translate-y-1/2 max-w-[260px] sm:max-w-xs z-20 pointer-events-none transition-opacity duration-700 max-sm:right-auto max-sm:left-1/2 max-sm:-translate-x-1/2">
-    <img 
-      src="instruction.svg" 
-      alt="Instructions" 
-      class="w-full h-auto block select-none drop-shadow-sm"
-    />
-  </aside>
+
 
   <style>
     body {
@@ -120,6 +112,15 @@
       tomclouaire.com
     </span>
   </header>
+    <!-- Image d'instructions visible à l'arrivée -->
+  <aside id="instructions-guide" class="fixed right-8 top-1/2 -translate-y-1/2 max-w-[260px] sm:max-w-xs z-20 pointer-events-none transition-opacity duration-700 max-sm:right-auto max-sm:left-1/2 max-sm:-translate-x-1/2">
+    <img 
+      src="instruction.svg" 
+      alt="Instructions" 
+      class="w-full h-auto block select-none drop-shadow-sm"
+      opacity= 0.7;
+    />
+  </aside>
 
   <main id="canvas-container" class="w-full h-full relative overflow-hidden"></main>
 
@@ -162,7 +163,8 @@ let photoList = [];
       function onPointerDown(e) {
         // Empêche le clic de se propager au fond (ne déclenche pas une nouvelle photo)
         e.stopPropagation();
-
+        const guide = document.getElementById('instructions-guide');
+        if (guide) guide.classList.add('hidden-fade');
         isDragging = true;
         element.classList.add('is-dragging');
 
@@ -272,17 +274,6 @@ let photoList = [];
     // =========================================================================
     window.addEventListener('DOMContentLoaded', loadPhotoFromJSON);
     window.addEventListener('click', dropNextPhoto);
-
-function onPointerDown(e) {
-        e.stopPropagation();
-
-        // NOUVEAU : Fait disparaître l'image d'instructions au premier déplacement
-        const guide = document.getElementById('instructions-guide');
-        if (guide) guide.classList.add('hidden-fade');
-
-        isDragging = true;
-        element.classList.add('is-dragging');
-        // ... reste du code inchangé ...
 
     
   </script>
