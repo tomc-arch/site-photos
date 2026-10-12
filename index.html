@@ -32,21 +32,31 @@
       Un paysage 3:2 fait 480x320px, un portrait 2:3 fait 320x480px.
       Ils couvrent exactement la même surface à l'écran.
     */
-    .photo-print {
-      position: absolute; 
+.photo-print {
+      position: absolute;
       background: #ffffff;
-      padding: 4px; /* Bordure blanche papier généreuse (style passe-partout / tirage d'art) */
+      padding: 4px; /* Marge fixe de 4px demandée */
       box-shadow:
         0 1px 3px rgba(0, 0, 0, 0.10),
         0 3px 8px rgba(0, 0, 0, 0.06);
       opacity: 0;
-      transition: opacity 0.15s ease-out, transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
-      pointer-events: none;
-      max-width: min(84vw, 500px);
-      max-height: min(72vh, 500px);
+      pointer-events: auto; /* Active la capture de clic / drag sur la photo */
+      cursor: grab;         /* Affiche la main prête à saisir */
+      user-select: none;
+      touch-action: none;   /* Empêche le défilement de l'écran sur mobile pendant le drag */
       width: fit-content;
       height: fit-content;
-      box-sizing: border-box;
+      max-width: min(82vw, 480px);
+      max-height: min(68vh, 480px);
+      transition: opacity 0.15s ease-out;
+    }
+
+    /* Curseur main fermée pendant la prise en main */
+    .photo-print.is-dragging {
+      cursor: grabbing;
+      box-shadow:
+        0 8px 18px rgba(0, 0, 0, 0.15),
+        0 4px 8px rgba(0, 0, 0, 0.08);
     }
 
     /* Contrainte sur l'image interne */
@@ -57,6 +67,7 @@
       height: auto;
       display: block;
       object-fit: contain;
+      pointer-events: none; /* L'image interne ne bloque pas le geste */
     }
 
     /* Texture grain argentique */
@@ -102,7 +113,8 @@
     let photoList = [];
     let currentIndex = 0;
     let highestZIndex = 1;
-
+//debut fonction load photo par json
+    
     async function loadPhotoFromJSON() {
       try {
         const response = await fetch('photos.json');
@@ -113,11 +125,83 @@
       }
     }
 
-    function dropNextPhoto() {
-      if (!Array.isArray(photoList) || photoList.length === 0) return;
+//debut fonction draggable. 
+    
+    function makeDraggable(element, initialAngle) {
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let initialLeft = 0;
+      let initialTop = 0;
+
+      function onPointerDown(e) {
+  // Empêche le clic de se propager au fond (ne déclenche pas une nouvelle photo)
+        e.stopPropagation();
+
+        isDragging = true;
+        element.classList.add('is-dragging');
+
+        // Coordonnées du pointeur (souris ou doigt)
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        startX = clientX;
+        startY = clientY;
+
+        // Position actuelle de l'élément dans la fenêtre
+        const rect = element.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        // On bascule en coordonnées pixels absolues pour un déplacement fluide
+        element.style.left = `${initialLeft}px`;
+        element.style.top = `${initialTop}px`;
+        element.style.transform = `rotate(${initialAngle}deg)`;
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging) return;
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+
+        element.style.left = `${initialLeft + deltaX}px`;
+        element.style.top = `${initialTop + deltaY}px`;
+      }
+
+      function onPointerUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        element.classList.remove('is-dragging');
+
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('pointercancel', onPointerUp);
+      }
+
+      // Écouteur tactile et souris universel
+      element.addEventListener('pointerdown', onPointerDown);
+    }
+
+function dropNextPhoto(e) {
+      // Si le clic provient d'une photo déjà posée, on ne génère rien
+      if (e.target.closest('.photo-print')) return;
+
+      const activeList = (Array.isArray(photoList) && photoList.length > 0)
+        ? photoList
+        : [
+            { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80", alt: "Photo 1" }
+          ];
 
       const container = document.getElementById('canvas-container');
-      const photoItem = photoList[currentIndex];
+      const photoItem = activeList[currentIndex];
 
       const card = document.createElement('div');
       card.className = 'photo-print';
@@ -125,13 +209,11 @@
       const img = document.createElement('img');
       img.src = photoItem.url || photoItem;
       img.alt = photoItem.alt || 'Photographie';
-
+      img.className = 'object-cover block';
       card.appendChild(img);
 
-      /* FIX INCLINAISON : strictement entre -2° et +2° */
+/* FIX INCLINAISON : strictement entre -2° et +2° */
       const randomAngle = (Math.random() * 4 - 2).toFixed(1);
-
-      /* FIX CENTRAGE : décalage subtil autour du centre */
       const offsetX = (Math.random() * 16 - 8).toFixed(1); // entre -8vw et +8vw
       const offsetY = (Math.random() * 12 - 6).toFixed(1); // entre -6vh et +6vh
 
