@@ -110,23 +110,34 @@
   <main id="canvas-container" class="w-full h-full relative overflow-hidden"></main>
 
   <script>
-    let photoList = [];
+let photoList = [];
     let currentIndex = 0;
     let highestZIndex = 1;
-//debut fonction load photo par json
-    
+
+    // =========================================================================
+    // 2. CHARGEMENT & PRÉCHARGEMENT SILENCIEUX
+    // =========================================================================
     async function loadPhotoFromJSON() {
       try {
         const response = await fetch('photos.json');
         if (!response.ok) throw new Error('photos.json not found');
         photoList = await response.json();
+
+        // Pré-téléchargement silencieux en cache
+        if (Array.isArray(photoList)) {
+          photoList.forEach(item => {
+            const preloadImg = new Image();
+            preloadImg.src = item.url || item;
+          });
+        }
       } catch (err) {
         console.warn('Fallback: check photos.json path or server status.', err.message);
       }
     }
 
-//debut fonction draggable. 
-    
+    // =========================================================================
+    // 3. LOGIQUE DU DRAG & DROP (SOURIS + MOBILE/TACTILE)
+    // =========================================================================
     function makeDraggable(element, initialAngle) {
       let isDragging = false;
       let startX = 0;
@@ -135,11 +146,15 @@
       let initialTop = 0;
 
       function onPointerDown(e) {
-  // Empêche le clic de se propager au fond (ne déclenche pas une nouvelle photo)
+        // Empêche le clic de se propager au fond (ne déclenche pas une nouvelle photo)
         e.stopPropagation();
 
         isDragging = true;
         element.classList.add('is-dragging');
+
+        // Passe la photo saisie au premier plan
+        highestZIndex += 1;
+        element.style.zIndex = highestZIndex;
 
         // Coordonnées du pointeur (souris ou doigt)
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -190,7 +205,10 @@
       element.addEventListener('pointerdown', onPointerDown);
     }
 
-function dropNextPhoto(e) {
+    // =========================================================================
+    // 4. CRÉATION ET DÉPÔT D'UNE PHOTO AU CLIC SUR LE FOND
+    // =========================================================================
+    function dropNextPhoto(e) {
       // Si le clic provient d'une photo déjà posée, on ne génère rien
       if (e.target.closest('.photo-print')) return;
 
@@ -212,30 +230,32 @@ function dropNextPhoto(e) {
       img.className = 'object-cover block';
       card.appendChild(img);
 
-/* FIX INCLINAISON : strictement entre -2° et +2° */
+      // Calcul de la rotation (±2° max) et de la dispersion
       const randomAngle = (Math.random() * 4 - 2).toFixed(1);
-      const offsetX = (Math.random() * 16 - 8).toFixed(1); // entre -8vw et +8vw
-      const offsetY = (Math.random() * 12 - 6).toFixed(1); // entre -6vh et +6vh
+      const offsetX = (Math.random() * 16 - 8).toFixed(1);
+      const offsetY = (Math.random() * 12 - 6).toFixed(1);
 
       highestZIndex += 1;
       card.style.zIndex = highestZIndex;
-
       card.style.left = `calc(50% + ${offsetX}vw)`;
       card.style.top = `calc(50% + ${offsetY}vh)`;
-      
-      /* translate(-50%, -50%) ancre le centre exact de la photo */
-      card.style.transform = `translate(-50%, -50%) rotate(${randomAngle}deg) scale(1.04)`;
+      card.style.transform = `translate(-50%, -50%) rotate(${randomAngle}deg)`;
+
+      // Active le drag and drop sur ce nouveau tirage
+      makeDraggable(card, randomAngle);
 
       container.appendChild(card);
 
       requestAnimationFrame(() => {
         card.classList.add('revealed');
-        card.style.transform = `translate(-50%, -50%) rotate(${randomAngle}deg) scale(1)`;
       });
 
-      currentIndex = (currentIndex + 1) % photoList.length;
+      currentIndex = (currentIndex + 1) % activeList.length;
     }
 
+    // =========================================================================
+    // 5. ÉCOUTEURS D'ÉVÉNEMENTS
+    // =========================================================================
     window.addEventListener('DOMContentLoaded', loadPhotoFromJSON);
     window.addEventListener('click', dropNextPhoto);
   </script>
