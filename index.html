@@ -11,68 +11,77 @@
     body {
       margin: 0;
       padding: 0;
-      overflow: hidden; /* Empêche l'apparition des barres de défilement (scrollbars) */
+      overflow: hidden; /* Empêche l'apparition des barres de défilement */
       background-color: #f7f5f0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      cursor: pointer; /* Indique visuellement que toute la surface est cliquable */
+      cursor: pointer; /* Curseur main sur toute la page */
     }
 
-    /* 
-      Texture de fond papier Canson :
-      Utilise votre image 'website-whitebg.jpg' étirée sur toute la fenêtre.
-    */
+    /* Fond canson */
     .canson-texture {
       background-color: #f7f5f0;
       background-image: url('website-whitebg.jpg');
-      background-size: cover;      /* L'image couvre tout l'écran */
-      background-position: center; /* Centrée horizontalement et verticalement */
+      background-size: cover;
+      background-position: center;
       background-repeat: no-repeat;
     }
 
     /* 
-      Style du tirage photo physique :
-      - position: absolute : indispensable pour placer chaque photo n'importe où
-      - padding: 5px : crée la marge blanche réaliste tout autour du tirage
-      - box-shadow : ombre portée douce et naturelle
-      - pointer-events: none : permet au clic de traverser les photos déjà posées
+      1. FIX SURFACE IDENTIQUE VERTICAL / HORIZONTAL :
+      max-width et max-height ont le même plafond (480px).
+      Un paysage 3:2 fait 480x320px, un portrait 2:3 fait 320x480px.
+      Ils couvrent exactement la même surface à l'écran.
     */
     .photo-print {
       position: absolute; 
       background: #ffffff;
-      padding: 5px; /* Bordure blanche papier de 5px */
+      padding: 5px; /* Bordure blanche papier */
       box-shadow:
         0 1px 3px rgba(0, 0, 0, 0.10),
-         0 3px 8px rgba(0, 0, 0, 0.06);
-      opacity: 0; /* Invisible au moment exact de sa création dans le DOM */
-      transform: scale(1.05); /* Légèrement plus GRANDE avant l'animation d'arrivée */
-      transition: opacity 0.1s ease-out, transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
-      pointer-events: none; /* Clics traversants : évite de bloquer les clics suivants */
-      max-width: 90vw;
-      width: 420px;
+        0 3px 8px rgba(0, 0, 0, 0.06);
+      opacity: 0;
+      transition: opacity 0.15s ease-out, transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+      pointer-events: none;
+      max-width: min(82vw, 480px);
+      max-height: min(68vh, 480px);
+      width: fit-content;
+      height: fit-content;
     }
-    /* Calque de texture grain papier photo argentique / fine art */
-.photo-print::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.18; /* Ajustez entre 0.10 (très subtil) et 0.25 (grain marqué) */
-  mix-blend-mode: overlay;
-}
-    /* 
-      Classe déclenchée dès l'insertion :
-      Passe l'opacité à 1 et déclenche l'animation de transition douce.
-    */
+
+    /* Contrainte sur l'image interne */
+    .photo-print img {
+      max-width: min(82vw, 480px);
+      max-height: min(68vh, 480px);
+      width: auto;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    /* Texture grain argentique */
+    .photo-print::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.18;
+      mix-blend-mode: overlay;
+    }
+    
     .photo-print.revealed {
       opacity: 1;
     }
 
-    /* Sur petit écran mobile, on réduit la marge blanche pour garder l'image visible */
     @media (max-width: 640px) {
       .photo-print {
-        padding: 5px;
-        width: 300px;
+        padding: 4px;
+        max-width: 86vw;
+        max-height: 64vh;
+      }
+      .photo-print img {
+        max-width: 86vw;
+        max-height: 64vh;
       }
     }
   </style>
@@ -80,122 +89,71 @@
 
 <body class="h-full w-full canson-texture relative">
 
-  <!-- Entête minimaliste : simple mention du domaine en haut à gauche -->
   <header class="absolute top-6 left-7 pointer-events-none select-none z-50">
     <span class="text-xs md:text-sm tracking-[0.22em] lowercase font-light text-neutral-400 font-mono">
       tomclouaire.com
     </span>
   </header>
 
-  <!-- 
-    Conteneur hôte vide :
-    C'est ici que le JavaScript viendra insérer chaque nouvelle photo cliquée.
-  -->
   <main id="canvas-container" class="w-full h-full relative overflow-hidden"></main>
 
   <script>
-    // =========================================================================
-    // 1. VARIABLES D'ÉTAT GLOBALES
-    // =========================================================================
-    
-    // photoList : Tableau (Array) qui stockera les données issues de 'photos.json'
     let photoList = [];
-
-    // currentIndex : Compteur qui retient l'index de la prochaine photo à afficher
     let currentIndex = 0;
-
-    // highestZIndex : Ordre d'empilement (calques). Chaque nouvelle photo reçoit
-    // une valeur supérieure pour toujours être posée au-dessus des précédentes.
     let highestZIndex = 1;
 
-
-    // =========================================================================
-    // 2. FONCTION : CHARGEMENT DU CATALOGUE PHOTOS
-    // =========================================================================
-    // Télécharge photos.json en arrière-plan sans rien afficher à l'écran.
     async function loadPhotoFromJSON() {
       try {
-        // Envoie la requête HTTP locale pour récupérer le fichier photos.json
         const response = await fetch('photos.json');
-
-        // Si le fichier n'existe pas ou renvoie une erreur 404
         if (!response.ok) throw new Error('photos.json not found');
-
-        // Parse le format JSON en tableau d'objets JavaScript utilisable
         photoList = await response.json();
       } catch (err) {
         console.warn('Fallback: check photos.json path or server status.', err.message);
       }
     }
 
-
-    // =========================================================================
-    // 3. FONCTION : CRÉATION ET DÉPÔT D'UNE PHOTO AU CLIC
-    // =========================================================================
     function dropNextPhoto() {
-      // Sécurité : si photos.json n'est pas encore prêt ou est vide, on arrête ici
       if (!Array.isArray(photoList) || photoList.length === 0) return;
 
-      // On cible le conteneur <main> où déposer la photo
       const container = document.getElementById('canvas-container');
-
-      // On sélectionne l'objet photo à afficher selon notre index courant
       const photoItem = photoList[currentIndex];
 
-      // --- CRÉATION DYNAMIQUE DES ÉLÉMENTS HTML ---
-      // A) Création du conteneur du tirage photo (<div class="photo-print">)
       const card = document.createElement('div');
       card.className = 'photo-print';
 
-      // B) Création de l'image intérieure (<img>)
       const img = document.createElement('img');
       img.src = photoItem.url || photoItem;
       img.alt = photoItem.alt || 'Photographie';
-      img.className = 'w-full h-auto object-cover block';
 
-      // On place l'image à l'intérieur du cadre blanc
       card.appendChild(img);
 
-      // --- CALCULS DU "JET ALÉATOIRE" DE PHOTO ---
-      // Rotation aléatoire : angle compris entre -8° et +8° (aspect naturel)
-      const randomAngle = (Math.random() * 16 - 8).toFixed(1);
+      /* 2. FIX INCLINAISON : strictement entre -2° et +2° */
+      const randomAngle = (Math.random() * 4 - 2).toFixed(1);
 
-      // Décalage du centre : variation de ±12% autour du centre de l'écran
-      const offsetX = (Math.random() * 24 - 20).toFixed(1);
-      const offsetY = (Math.random() * 24 - 20).toFixed(1);
+      /* 3. FIX CENTRAGE & TAILLE ÉCRAN : léger décalage autour du centre sans déborder */
+      const offsetX = (Math.random() * 16 - 8).toFixed(1); // entre -8vw et +8vw
+      const offsetY = (Math.random() * 12 - 6).toFixed(1); // entre -6vh et +6vh
 
-      // Augmentation du z-index : la nouvelle photo se pose strictement sur le dessus
       highestZIndex += 1;
       card.style.zIndex = highestZIndex;
 
-      // Positionnement au centre de l'écran + le décalage aléatoire
       card.style.left = `calc(50% + ${offsetX}vw)`;
       card.style.top = `calc(50% + ${offsetY}vh)`;
       
-      // Position initiale (légèrement réduite pour l'effet de rebond)
-      card.style.transform = `translate(-10%, -10%) rotate(${randomAngle}deg) scale(1.05)`;
+      /* translate(-50%, -50%) ancre le centre exact de la photo */
+      card.style.transform = `translate(-50%, -50%) rotate(${randomAngle}deg) scale(1.04)`;
 
-      // Insertion du nouvel élément dans la page web
       container.appendChild(card);
 
-      // Déclenchement de l'animation d'apparition fluide à la frame suivante
       requestAnimationFrame(() => {
-        card.classList.add('revealed'); // Passe opacity à 1
-        card.style.transform = `translate(-10%, -10%) rotate(${randomAngle}deg) scale(1)`;
+        card.classList.add('revealed');
+        card.style.transform = `translate(-50%, -50%) rotate(${randomAngle}deg) scale(1)`;
       });
 
-      // Avancement du compteur : passe à la suivante et boucle au début si fin atteinte
       currentIndex = (currentIndex + 1) % photoList.length;
     }
 
-
-    // =========================================================================
-    // 4. ÉCOUTEURS D'ÉVÉNEMENTS (LISTENERS)
-    // =========================================================================
-    // Dès que la page est chargée : pré-charge la liste JSON
     window.addEventListener('DOMContentLoaded', loadPhotoFromJSON);
-
-    // À chaque clic n'importe où sur l'écran : dépose la photo suivante
     window.addEventListener('click', dropNextPhoto);
   </script>
   
