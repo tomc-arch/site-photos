@@ -125,7 +125,7 @@
   <main id="canvas-container" class="w-full h-full relative overflow-hidden"></main>
 
   <script>
-let photoList = [];
+    let photoList = [];
     let currentIndex = 0;
     let highestZIndex = 1;
 
@@ -136,7 +136,21 @@ let photoList = [];
       try {
         const response = await fetch('photos.json');
         if (!response.ok) throw new Error('photos.json not found');
-        photoList = await response.json();
+        const photos = await response.json();
+        if (!Array.isArray(photos)) throw new Error('Invalid photo list');
+
+        // Keep each image once, then shuffle with Fisher-Yates.
+        const seenUrls = new Set();
+        photoList = photos.filter(item => {
+          const url = typeof item === 'string' ? item : item?.url;
+          if (!url || seenUrls.has(url)) return false;
+          seenUrls.add(url);
+          return true;
+        });
+        for (let i = photoList.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [photoList[i], photoList[j]] = [photoList[j], photoList[i]];
+        }
 
         // Pré-téléchargement silencieux en cache
         if (Array.isArray(photoList)) {
@@ -228,14 +242,11 @@ let photoList = [];
       // Si le clic provient d'une photo déjà posée, on ne génère rien
       if (e.target.closest('.photo-print')) return;
 
-      const activeList = (Array.isArray(photoList) && photoList.length > 0)
-        ? photoList
-        : [
-            { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80", alt: "Photo 1" }
-          ];
+      // Wait for loading, and stop once every photo has been shown.
+      if (currentIndex >= photoList.length) return;
 
       const container = document.getElementById('canvas-container');
-      const photoItem = activeList[currentIndex];
+      const photoItem = photoList[currentIndex++];
 
       const card = document.createElement('div');
       card.className = 'photo-print';
@@ -266,7 +277,6 @@ let photoList = [];
         card.classList.add('revealed');
       });
 
-      currentIndex = (currentIndex + 1) % activeList.length;
     }
 
     // =========================================================================
