@@ -248,10 +248,11 @@
     const totalFrames = 81; // de 200 à 280 inclus
     const animationFrames = [];
 
+    
     function preloadSequenceImages() {
       for (let i = 200; i <= 280; i++) {
         const img = new Image();
-        img.src = `animation_TomsPlayground ${i}.png`;
+        img.src = `animation/animation_TomsPlayground ${i}.png`; // <-- Ajout du sous-dossier ici
         animationFrames.push(img);
       }
     }
