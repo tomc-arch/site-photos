@@ -402,13 +402,13 @@
     // =========================================================================
     // 4. LECTURE DE LA SÉQUENCE D'IMAGES SUR LE CANVAS
     // =========================================================================
-    function triggerSequenceAnimation() {
+   function triggerSequenceAnimation() {
       const container = document.getElementById('intro-canvas-container');
       const canvas = document.getElementById('intro-canvas');
       const overlay = document.getElementById('intro-overlay');
       const ctx = canvas.getContext('2d');
 
-      if (overlay) overlay.classList.add('dismissed');
+      // On active le conteneur du canvas au-dessus du flou SANS retirer le flou
       container.classList.add('active');
 
       let currentFrame = 0;
@@ -424,7 +424,6 @@
 
           const img = animationFrames[currentFrame];
           if (img && img.complete) {
-            // Ajustement de la taille du canvas à la résolution réelle des images
             if (canvas.width !== img.naturalWidth || canvas.height !== img.naturalHeight) {
               canvas.width = img.naturalWidth;
               canvas.height = img.naturalHeight;
@@ -436,9 +435,10 @@
           currentFrame++;
 
           if (currentFrame >= animationFrames.length) {
-            // Fin de l'animation : disparition douce et activation du Playground
+            // FIN DE L'ANIMATION : On fait disparaître le canvas ET le flou en même temps
             setTimeout(() => {
               container.classList.remove('active');
+              if (overlay) overlay.classList.add('dismissed'); // <-- DÉPLACÉ ICI
               isIntroActive = false;
             }, 100);
             return;
