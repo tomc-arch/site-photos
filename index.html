@@ -67,6 +67,27 @@
       pointer-events: none;
     }
 
+    /* Conteneur et lecteur de l'animation vidéo */
+    #intro-video-container {
+      position: fixed;
+      inset: 0;
+      z-index: 110;
+      background-color: #f7f5f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.5s ease, visibility 0.5s;
+    }
+
+    #intro-video-container.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
     /* Texte d'introduction : gris foncé (#525252) */
     .intro-text {
       font-family: 'Roboto', sans-serif;
@@ -159,6 +180,18 @@
 </head>
 
 <body class="h-full w-full canson-texture relative">
+
+  <!-- Calque d'animation After Effects -->
+  <div id="intro-video-container">
+    <video 
+      id="intro-video" 
+      class="max-w-full max-h-full object-contain"
+      playsinline 
+      muted 
+      preload="auto">
+      <source src="animation_TomsPlayground.mp4" type="video/mp4">
+    </video>
+  </div>
 
   <!-- Calque d'introduction Frosted Glass -->
   <div id="intro-overlay">
@@ -352,16 +385,50 @@
     }
 
     // =========================================================================
-    // 4. NAVIGATION ET DÉCLENCHEURS D'ENTRÉE / RETOUR AU BLUR
+    // 4. NAVIGATION, LECTURE VIDÉO & RETOUR AU BLUR
     // =========================================================================
+    function triggerIntroVideo() {
+      const videoContainer = document.getElementById('intro-video-container');
+      const video = document.getElementById('intro-video');
+      const overlay = document.getElementById('intro-overlay');
+
+      if (!video || !videoContainer) {
+        if (overlay) overlay.classList.add('dismissed');
+        isIntroActive = false;
+        return;
+      }
+
+      // Masque l'overlay textuel et affiche le conteneur vidéo
+      videoContainer.classList.add('active');
+      if (overlay) overlay.classList.add('dismissed');
+
+      // Déclenche la lecture
+      video.currentTime = 0;
+      const playPromise = video.play();
+
+      function finishAnimation() {
+        videoContainer.classList.remove('active');
+        isIntroActive = false;
+      }
+
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            video.onended = finishAnimation;
+          })
+          .catch(() => {
+            // Repli immédiat si autoplay bloqué
+            finishAnimation();
+          });
+      } else {
+        video.onended = finishAnimation;
+      }
+    }
+
     function enterPlayground(e) {
       e.stopPropagation();
       e.preventDefault();
-      const overlay = document.getElementById('intro-overlay');
-      if (overlay) {
-        overlay.classList.add('dismissed');
-      }
-      isIntroActive = false;
+      triggerIntroVideo();
     }
 
     function openAboutOverlay(e) {
