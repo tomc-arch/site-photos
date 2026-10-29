@@ -22,12 +22,22 @@
       overflow-y: scroll;
     }
 
-    /* Grille de 4 colonnes égales avec espacement strict de 4px */
-    .catalogue-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 4px;
+    /* 
+      Disposition par colonnes indépendantes (Masonry pur) :
+      Évite l'effet "grille/lignes" et empile les images verticalement 
+      selon leur format naturel (2 horizontales à côté d'une verticale).
+    */
+    .catalogue-columns {
+      column-count: 4;
+      column-gap: 4px;
       padding: 4px;
+    }
+
+    /* Élément photo : marge inférieure de 4px et interdiction de coupure */
+    .catalogue-item {
+      break-inside: avoid;
+      margin-bottom: 4px;
+      display: block;
     }
 
     /* Traitement Noir & Blanc contrasté pour accentuer la géométrie */
@@ -79,8 +89,8 @@
 
     /* Adaptation mobile : 2 colonnes sous 640px pour préserver la lisibilité */
     @media (max-width: 640px) {
-      .catalogue-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .catalogue-columns {
+        column-count: 2;
       }
       #lightbox-img {
         max-width: 90vw;
@@ -98,9 +108,9 @@
     <a href="index.html" class="underline underline-offset-4 hover:text-neutral-900 transition-colors">playground</a>
   </header>
 
-  <!-- Grille catalogue à 4 colonnes -->
+  <!-- Flux continu de photos sans lignes rigides -->
   <main class="w-full flex-1">
-    <div id="catalogue-container" class="catalogue-grid"></div>
+    <div id="catalogue-container" class="catalogue-columns"></div>
   </main>
 
   <!-- Pied de page discret -->
@@ -152,7 +162,7 @@
       }
     }
 
-    // Rendu dynamique de la grille
+    // Rendu dynamique dans les colonnes
     function renderGrid() {
       const container = document.getElementById('catalogue-container');
       container.innerHTML = '';
@@ -188,7 +198,7 @@
       modalImg.src = url;
       modalImg.alt = alt;
       modal.classList.add('active');
-      document.body.style.overflow = 'hidden'; // Bloque le scroll pendant la vue grand format
+      document.body.style.overflow = 'hidden'; // Bloque le scroll arrière-plan
     }
 
     function closeLightbox() {
