@@ -181,11 +181,14 @@
     </div>
   </div>
 
-  <!-- En-tête : tomclouaire.com playground dans la même typographie -->
-  <header class="absolute top-6 left-7 pointer-events-none select-none z-50">
-    <span class="text-xs md:text-sm tracking-[0.22em] lowercase font-light text-neutral-400 font-mono">
+  <!-- En-tête : navigation avec accès au texte d'intro et lien catalogue -->
+  <header class="absolute top-6 left-0 right-0 px-7 flex justify-between items-center pointer-events-none select-none z-50">
+    <span id="btn-open-about" class="text-xs md:text-sm tracking-[0.22em] lowercase font-light text-neutral-400 font-mono pointer-events-auto cursor-pointer hover:text-neutral-600 transition-colors">
       tomclouaire.com playground
     </span>
+    <a href="catalogue.html" class="text-xs md:text-sm tracking-[0.22em] lowercase font-light text-neutral-400 font-mono underline underline-offset-4 pointer-events-auto hover:text-neutral-900 transition-colors">
+      catalogue
+    </a>
   </header>
 
   <!-- Image d'instructions visible à l'arrivée -->
@@ -349,7 +352,7 @@
     }
 
     // =========================================================================
-    // 4. NAVIGATION ET DÉCLENCHEURS D'ENTRÉE
+    // 4. NAVIGATION ET DÉCLENCHEURS D'ENTRÉE / RETOUR AU BLUR
     // =========================================================================
     function enterPlayground(e) {
       e.stopPropagation();
@@ -361,9 +364,24 @@
       isIntroActive = false;
     }
 
+    function openAboutOverlay(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      const overlay = document.getElementById('intro-overlay');
+      if (overlay) {
+        overlay.classList.remove('dismissed');
+      }
+      isIntroActive = true;
+    }
+
     const playgroundLink = document.getElementById('btn-playground');
     if (playgroundLink) {
       playgroundLink.addEventListener('pointerdown', enterPlayground);
+    }
+
+    const aboutLink = document.getElementById('btn-open-about');
+    if (aboutLink) {
+      aboutLink.addEventListener('pointerdown', openAboutOverlay);
     }
 
     window.addEventListener('DOMContentLoaded', loadPhotoFromJSON);
