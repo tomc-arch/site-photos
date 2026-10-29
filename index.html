@@ -498,6 +498,12 @@
       aboutLink.addEventListener('pointerdown', openAboutOverlay);
     }
 
+    document.querySelectorAll('a[href="catalogue.html"]').forEach(link => {
+      link.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
+    });
+
     window.addEventListener('DOMContentLoaded', loadPhotoFromJSON);
     window.addEventListener('pointerdown', dropNextPhoto);
   </script>
