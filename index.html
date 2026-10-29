@@ -40,14 +40,14 @@
       pointer-events: none;
     }
 
-    /* Calque d'introduction Frosted Glass iOS */
+    /* Calque d'introduction Frosted Glass iOS : flou très léger laissant voir le fond */
     #intro-overlay {
       position: fixed;
       inset: 0;
       z-index: 100;
-      background: rgba(247, 245, 240, 0.45);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      background: rgba(247, 245, 240, 0.25);
+      backdrop-filter: blur(5px) saturate(130%);
+      -webkit-backdrop-filter: blur(5px) saturate(130%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -67,11 +67,12 @@
       pointer-events: none;
     }
 
+    /* Texte d'introduction : gris foncé (#525252) */
     .intro-text {
       font-family: 'Roboto', sans-serif;
       font-style: italic;
       font-weight: 300;
-      color: #2b2b2b;
+      color: #525252;
       line-height: 1.75;
       letter-spacing: 0.015em;
     }
@@ -161,15 +162,15 @@
 
   <!-- Calque d'introduction Frosted Glass -->
   <div id="intro-overlay">
-    <div class="max-w-xl mx-auto space-y-6 text-sm sm:text-base md:text-lg intro-text text-neutral-800">
+    <div class="max-w-xl mx-auto space-y-6 text-sm sm:text-base md:text-lg intro-text">
       <p>
         Développé entre Grenoble et New York, avec une présentation notable à la galerie du 41 Park Row à Manhattan, ce travail explore les géométries et rythmes qui composent l'espace.
       </p>
       <p>
         L'approche s'écarte des représentations classiques par une tentative d'isoler les structures là où elles ne s'imposent pas d'évidence. Qu'il s'agisse d'environnements urbains ou de paysages plus vastes, le regard se resserre sur les lignes et les motifs du décor pour mettre en lumière ce qui échappe habituellement à l'attention. 
       </p>
-        <p>
-      C'est donc par l'exploration de la répétition des formes qu'émerge la singularité de scènes ordinaires.
+      <p>
+        C'est donc par l'exploration de la répétition des formes qu'émerge la singularité de scènes ordinaires.
       </p>
 
       <!-- Deux liens hypertextes textuels (lowtech) -->
@@ -180,9 +181,10 @@
     </div>
   </div>
 
+  <!-- En-tête : tomclouaire.com playground dans la même typographie -->
   <header class="absolute top-6 left-7 pointer-events-none select-none z-50">
     <span class="text-xs md:text-sm tracking-[0.22em] lowercase font-light text-neutral-400 font-mono">
-      tomclouaire.com
+      tomclouaire.com playground
     </span>
   </header>
 
