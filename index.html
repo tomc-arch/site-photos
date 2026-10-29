@@ -67,6 +67,17 @@
       pointer-events: none;
     }
 
+    /* Gestion de la disparition du texte sans retirer le flou d'arrière-plan */
+    #intro-content {
+      transition: opacity 0.3s ease, visibility 0.3s;
+    }
+
+    #intro-content.hidden-fade {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     /* Conteneur et canvas pour l'animation de la séquence PNG transparente */
     #intro-canvas-container {
       position: fixed;
@@ -196,15 +207,15 @@
 
   <!-- Calque d'introduction Frosted Glass -->
   <div id="intro-overlay">
-    <div class="max-w-xl mx-auto space-y-6 text-sm sm:text-base md:text-lg intro-text">
+    <div id="intro-content" class="max-w-xl mx-auto space-y-6 text-sm sm:text-base md:text-lg intro-text">
       <p>
-        L'objectif de ces photographies est d'explorer les géométries qui composent l'espace.
+        L'objectif de ces photographies est d'explorer les géométries qui composent l'espace.[cite: 6]
       </p>
       <p>
-        L'approche se distingue d'une représentation classique en tant qu'elle est une tentative d'isoler les lignes, géométries, répétitions là où elles ne s'imposent pas à première vue. 
+        L'approche se distingue d'une représentation classique en tant qu'elle est une tentative d'isoler les lignes, géométries, répétitions là où elles ne s'imposent pas à première vue.[cite: 6]
       </p>
       <p>
-        C'est en se focalisant sur la répétition des formes et leur mise en valeur qu'émerge la singularité de scènes - a priori - ordinaires.
+        C'est en se focalisant sur la répétition des formes et leur mise en valeur qu'émerge la singularité de scènes - a priori - ordinaires.[cite: 6]
       </p>
 
       <!-- Deux liens hypertextes textuels (lowtech) -->
@@ -248,11 +259,10 @@
     const totalFrames = 81; // de 200 à 280 inclus
     const animationFrames = [];
 
-    
     function preloadSequenceImages() {
       for (let i = 200; i <= 280; i++) {
         const img = new Image();
-        img.src = `animation/animation_TomsPlayground ${i}.png`; // <-- Ajout du sous-dossier ici
+        img.src = `animation/animation_TomsPlayground ${i}.png`;
         animationFrames.push(img);
       }
     }
@@ -402,17 +412,23 @@
     // =========================================================================
     // 4. LECTURE DE LA SÉQUENCE D'IMAGES SUR LE CANVAS
     // =========================================================================
-   function triggerSequenceAnimation() {
+    function triggerSequenceAnimation() {
       const container = document.getElementById('intro-canvas-container');
       const canvas = document.getElementById('intro-canvas');
       const overlay = document.getElementById('intro-overlay');
+      const introContent = document.getElementById('intro-content');
       const ctx = canvas.getContext('2d');
 
-      // On active le conteneur du canvas au-dessus du flou SANS retirer le flou
+      // 1. Disparition du texte seul, le flou reste actif
+      if (introContent) {
+        introContent.classList.add('hidden-fade');
+      }
+
+      // 2. Affichage et lecture de l'animation par-dessus le flou
       container.classList.add('active');
 
       let currentFrame = 0;
-      const fps = 30; // Cadence d'animation
+      const fps = 30;
       const interval = 1000 / fps;
       let lastTime = performance.now();
 
@@ -435,10 +451,10 @@
           currentFrame++;
 
           if (currentFrame >= animationFrames.length) {
-            // FIN DE L'ANIMATION : On fait disparaître le canvas ET le flou en même temps
+            // 3. Fin de l'animation : le canvas et le flou s'effacent ensemble
             setTimeout(() => {
               container.classList.remove('active');
-              if (overlay) overlay.classList.add('dismissed'); // <-- DÉPLACÉ ICI
+              if (overlay) overlay.classList.add('dismissed');
               isIntroActive = false;
             }, 100);
             return;
@@ -461,8 +477,13 @@
       e.stopPropagation();
       e.preventDefault();
       const overlay = document.getElementById('intro-overlay');
+      const introContent = document.getElementById('intro-content');
+
       if (overlay) {
         overlay.classList.remove('dismissed');
+      }
+      if (introContent) {
+        introContent.classList.remove('hidden-fade');
       }
       isIntroActive = true;
     }
