@@ -11,18 +11,18 @@
   <!-- Google Fonts: Roboto (Italic & Light) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,300;1,400&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
 
   <style>
     body {
       margin: 0;
       padding: 0;
-      overflow: hidden; /* Empêche l'apparition des barres de défilement */
+      overflow: hidden;
       background-color: #f7f5f0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      touch-action: none; /* Empêche le scrolling élastique sur iOS */
+      touch-action: none;
     }
 
     /* Fond canson */
@@ -52,7 +52,6 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      cursor: pointer;
       opacity: 1;
       visibility: visible;
       transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -77,11 +76,27 @@
       letter-spacing: 0.015em;
     }
 
+    /* Liens hypertextes textuels (low-tech) */
+    .nav-link {
+      font-family: 'Roboto Mono', monospace, sans-serif;
+      font-style: normal;
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      color: #737373;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    .nav-link:hover {
+      color: #171717;
+    }
+
     /* Style du tirage photo physique */
     .photo-print {
       position: absolute;
       background: #ffffff;
-      padding: 4px; /* Marge fixe de 4px demandée */
+      padding: 4px;
       box-shadow:
         0 1px 3px rgba(0, 0, 0, 0.10),
         0 3px 8px rgba(0, 0, 0, 0.06);
@@ -97,7 +112,6 @@
       transition: opacity 0.15s ease-out;
     }
 
-    /* Curseur main fermée pendant la prise en main */
     .photo-print.is-dragging {
       cursor: grabbing;
       box-shadow:
@@ -105,7 +119,6 @@
         0 4px 8px rgba(0, 0, 0, 0.08);
     }
 
-    /* Contrainte sur l'image interne */
     .photo-print img {
       max-width: min(76vw, 440px);
       max-height: min(62vh, 440px);
@@ -116,7 +129,6 @@
       pointer-events: none;
     }
 
-    /* Texture grain argentique */
     .photo-print::after {
       content: "";
       position: absolute;
@@ -149,13 +161,19 @@
 
   <!-- Calque d'introduction Frosted Glass -->
   <div id="intro-overlay">
-    <div class="max-w-xl mx-auto space-y-5 text-sm sm:text-base md:text-lg intro-text text-neutral-800">
+    <div class="max-w-xl mx-auto space-y-6 text-sm sm:text-base md:text-lg intro-text text-neutral-800">
       <p>
-        Développé entre Grenoble et New York, avec une présentation notable à la galerie du 41 Park Row à Manhattan, l'objectif de ce travail photographique est d'explorer les géométries qui composent l'espace.
+        Développé entre Grenoble et New York, avec une présentation notable à la galerie du 41 Park Row à Manhattan, ce travail photographique explore la géométrie et le rythme qui composent l'espace.
       </p>
       <p>
-        L'approche s'écarte des représentations plus classiques avec une tentative d'isoler les structures là où elles ne s'imposent pas d'évidence. Environnements urbains, paysages plus vastes, le regard se resserre sur les lignes et les motifs du décor pour mettre en lumière ce qui échappe d'abord à l'attention. La démarche s'articule ainsi autour d'une tension visuelle : c'est par la répétition des formes qu'émerge paradoxalement une singularité dans des scènes ordinaires.
+        L'approche s'écarte des représentations classiques par une tentative d'isoler les structures là où elles ne s'imposent pas d'évidence. Qu'il s'agisse d'environnements urbains ou de paysages plus vastes, le regard se resserre sur les lignes et les motifs du décor pour mettre en lumière ce qui échappe habituellement à l'attention. La démarche s'articule ainsi autour d'une tension visuelle : c'est par l'exploration de la répétition des formes que parvient à émerger la singularité d'une scène ordinaire.
       </p>
+
+      <!-- Deux liens hypertextes textuels (lowtech) -->
+      <div class="pt-2 flex items-center space-x-6">
+        <a id="btn-playground" class="nav-link">playground</a>
+        <a href="catalogue.html" class="nav-link">catalogue</a>
+      </div>
     </div>
   </div>
 
@@ -192,7 +210,6 @@
         const photos = await response.json();
         if (!Array.isArray(photos)) throw new Error('Invalid photo list');
 
-        // Conserve chaque image une seule fois puis mélange aléatoirement
         const seenUrls = new Set();
         photoList = photos.filter(item => {
           const url = typeof item === 'string' ? item : item?.url;
@@ -206,7 +223,6 @@
           [photoList[i], photoList[j]] = [photoList[j], photoList[i]];
         }
 
-        // Pré-téléchargement silencieux en cache
         if (Array.isArray(photoList)) {
           photoList.forEach(item => {
             const preloadImg = new Image();
@@ -292,6 +308,7 @@
     // 3. CRÉATION ET DÉPÔT D'UNE PHOTO AU CLIC SUR LE FOND
     // =========================================================================
     function dropNextPhoto(e) {
+      if (isIntroActive) return;
       if (e && e.target && e.target.closest('.photo-print')) return;
 
       if (currentIndex >= photoList.length) return;
@@ -327,24 +344,25 @@
     }
 
     // =========================================================================
-    // 4. GESTION DE L'ÉCRAN D'ACCUEIL ET DES CLICS
+    // 4. NAVIGATION ET DÉCLENCHEURS D'ENTRÉE
     // =========================================================================
-    function handleInteraction(e) {
-      if (isIntroActive) {
-        e.stopPropagation();
-        const overlay = document.getElementById('intro-overlay');
-        if (overlay) {
-          overlay.classList.add('dismissed');
-        }
-        isIntroActive = false;
-        return;
+    function enterPlayground(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      const overlay = document.getElementById('intro-overlay');
+      if (overlay) {
+        overlay.classList.add('dismissed');
       }
+      isIntroActive = false;
+    }
 
-      dropNextPhoto(e);
+    const playgroundLink = document.getElementById('btn-playground');
+    if (playgroundLink) {
+      playgroundLink.addEventListener('pointerdown', enterPlayground);
     }
 
     window.addEventListener('DOMContentLoaded', loadPhotoFromJSON);
-    window.addEventListener('pointerdown', handleInteraction);
+    window.addEventListener('pointerdown', dropNextPhoto);
   </script>
   
 </body>
