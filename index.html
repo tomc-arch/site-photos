@@ -67,25 +67,33 @@
       pointer-events: none;
     }
 
-    /* Conteneur et lecteur de l'animation vidéo */
-    #intro-video-container {
+    /* Conteneur et canvas pour l'animation de la séquence PNG transparente */
+    #intro-canvas-container {
       position: fixed;
       inset: 0;
       z-index: 110;
-      background-color: #f7f5f0;
+      background: transparent;
       display: flex;
       align-items: center;
       justify-content: center;
+      pointer-events: none;
       opacity: 0;
       visibility: hidden;
-      pointer-events: none;
-      transition: opacity 0.5s ease, visibility 0.5s;
+      transition: opacity 0.4s ease, visibility 0.4s;
     }
 
-    #intro-video-container.active {
+    #intro-canvas-container.active {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
+    }
+
+    #intro-canvas {
+      max-width: min(80vw, 520px);
+      max-height: min(80vh, 520px);
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     /* Texte d'introduction : gris foncé (#525252) */
@@ -181,29 +189,22 @@
 
 <body class="h-full w-full canson-texture relative">
 
-  <!-- Calque d'animation After Effects -->
-  <div id="intro-video-container">
-    <video 
-      id="intro-video" 
-      class="max-w-full max-h-full object-contain"
-      playsinline 
-      muted 
-      preload="auto">
-      <source src="animation_TomsPlayground.mp4" type="video/mp4">
-    </video>
+  <!-- Calque d'animation Séquence d'images Canvas -->
+  <div id="intro-canvas-container">
+    <canvas id="intro-canvas"></canvas>
   </div>
 
   <!-- Calque d'introduction Frosted Glass -->
   <div id="intro-overlay">
     <div class="max-w-xl mx-auto space-y-6 text-sm sm:text-base md:text-lg intro-text">
       <p>
-        Développé entre Grenoble et New York, avec une présentation notable à la galerie du 41 Park Row à Manhattan, ce travail explore les géométries et rythmes qui composent l'espace.
+        Développé entre Grenoble et New York, avec une présentation notable à la galerie du 41 Park Row à Manhattan, ce travail explore les géométries et rythmes qui composent l'espace.[cite: 4]
       </p>
       <p>
-        L'approche s'écarte des représentations classiques par une tentative d'isoler les structures là où elles ne s'imposent pas d'évidence. Qu'il s'agisse d'environnements urbains ou de paysages plus vastes, le regard se resserre sur les lignes et les motifs du décor pour mettre en lumière ce qui échappe habituellement à l'attention. 
+        L'approche s'écarte des représentations classiques par une tentative d'isoler les structures là où elles ne s'imposent pas d'évidence. Qu'il s'agisse d'environnements urbains ou de paysages plus vastes, le regard se resserre sur les lignes et les motifs du décor pour mettre en lumière ce qui échappe habituellement à l'attention.[cite: 4]
       </p>
       <p>
-        C'est donc par l'exploration de la répétition des formes qu'émerge la singularité de scènes ordinaires.
+        C'est donc par l'exploration de la répétition des formes qu'émerge la singularité de scènes ordinaires.[cite: 4]
       </p>
 
       <!-- Deux liens hypertextes textuels (lowtech) -->
@@ -242,9 +243,22 @@
     let isIntroActive = true;
 
     // =========================================================================
-    // 1. CHARGEMENT & PRÉCHARGEMENT SILENCIEUX
+    // 1. CHARGEMENT PHOTOS & PRÉCHARGEMENT DE LA SÉQUENCE D'ANIMATION
     // =========================================================================
+    const totalFrames = 81; // de 200 à 280 inclus
+    const animationFrames = [];
+
+    function preloadSequenceImages() {
+      for (let i = 200; i <= 280; i++) {
+        const img = new Image();
+        img.src = `animation_TomsPlayground ${i}.png`;
+        animationFrames.push(img);
+      }
+    }
+
     async function loadPhotoFromJSON() {
+      preloadSequenceImages();
+
       try {
         const response = await fetch('photos.json');
         if (!response.ok) throw new Error('photos.json not found');
@@ -385,50 +399,61 @@
     }
 
     // =========================================================================
-    // 4. NAVIGATION, LECTURE VIDÉO & RETOUR AU BLUR
+    // 4. LECTURE DE LA SÉQUENCE D'IMAGES SUR LE CANVAS
     // =========================================================================
-    function triggerIntroVideo() {
-      const videoContainer = document.getElementById('intro-video-container');
-      const video = document.getElementById('intro-video');
+    function triggerSequenceAnimation() {
+      const container = document.getElementById('intro-canvas-container');
+      const canvas = document.getElementById('intro-canvas');
       const overlay = document.getElementById('intro-overlay');
+      const ctx = canvas.getContext('2d');
 
-      if (!video || !videoContainer) {
-        if (overlay) overlay.classList.add('dismissed');
-        isIntroActive = false;
-        return;
-      }
-
-      // Masque l'overlay textuel et affiche le conteneur vidéo
-      videoContainer.classList.add('active');
       if (overlay) overlay.classList.add('dismissed');
+      container.classList.add('active');
 
-      // Déclenche la lecture
-      video.currentTime = 0;
-      const playPromise = video.play();
+      let currentFrame = 0;
+      const fps = 30; // Cadence d'animation
+      const interval = 1000 / fps;
+      let lastTime = performance.now();
 
-      function finishAnimation() {
-        videoContainer.classList.remove('active');
-        isIntroActive = false;
+      function renderFrame(time) {
+        const delta = time - lastTime;
+
+        if (delta >= interval) {
+          lastTime = time - (delta % interval);
+
+          const img = animationFrames[currentFrame];
+          if (img && img.complete) {
+            // Ajustement de la taille du canvas à la résolution réelle des images
+            if (canvas.width !== img.naturalWidth || canvas.height !== img.naturalHeight) {
+              canvas.width = img.naturalWidth;
+              canvas.height = img.naturalHeight;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+          }
+
+          currentFrame++;
+
+          if (currentFrame >= animationFrames.length) {
+            // Fin de l'animation : disparition douce et activation du Playground
+            setTimeout(() => {
+              container.classList.remove('active');
+              isIntroActive = false;
+            }, 100);
+            return;
+          }
+        }
+
+        requestAnimationFrame(renderFrame);
       }
 
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            video.onended = finishAnimation;
-          })
-          .catch(() => {
-            // Repli immédiat si autoplay bloqué
-            finishAnimation();
-          });
-      } else {
-        video.onended = finishAnimation;
-      }
+      requestAnimationFrame(renderFrame);
     }
 
     function enterPlayground(e) {
       e.stopPropagation();
       e.preventDefault();
-      triggerIntroVideo();
+      triggerSequenceAnimation();
     }
 
     function openAboutOverlay(e) {
